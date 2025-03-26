@@ -7,12 +7,12 @@ This project is an automated stock trading system that separates the backend and
 ```
 trading-with-kiwoom-api/
 ├── backend/        # Backend (Django Ninja API, Celery, Kiwoom API Integration)
-│   ├── stock_project/
+│   ├── _core/
 │   │   ├── settings.py
 │   │   ├── urls.py
 │   │   ├── celery.py
 │   │   ├── wsgi.py
-│   ├── stocks/
+│   ├── a_stocks/
 │   │   ├── api.py  # Django Ninja API
 │   │   ├── models.py
 │   │   ├── views.py
@@ -39,18 +39,21 @@ trading-with-kiwoom-api/
 - **Web Server:** Uvicorn
 
 ## 🔧 Setup & Installation
+- UV: Python package installer
 ### 1️⃣ Clone the repository
 ```bash
-git clone https://github.com/your-repo/stock-trading.git
-cd stock-trading
+git clone https://github.com/bamjun/trading-with-kiwoom-api.git
+cd trading-with-kiwoom-api
 ```
 
 ### 2️⃣ Setup Backend
 ```bash
 cd backend
-uv venv .venv
+uv sync
+# window
+source .venv/scripts/activate
+# linux
 source .venv/bin/activate
-pip install -r requirements.txt
 python manage.py migrate
 python manage.py runserver 8000
 ```
@@ -97,3 +100,4 @@ docker-compose up --build
 - [Kiwoom REST API Guide](https://openapi.kiwoom.com/main/home)
 - [Docker Compose Guide](https://docs.docker.com/compose/)
 - [UV Docs](https://docs.astral.sh/uv/)
+- [keys](https://www.notion.so/twika-1c28c2bbc2e080f9bdece247ab1ad693)
