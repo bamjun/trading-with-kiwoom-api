@@ -1,7 +1,6 @@
-from ninja import NinjaAPI
-
 from backend.src._core.router import router as core_router
 from backend.src.a_stocks._router import stocks as stocks_router
+from ninja import NinjaAPI
 
 api = NinjaAPI(
     title="A Stocks API",
