@@ -1,6 +1,5 @@
-from ninja.router import Router
-
 from django.http import HttpRequest
+from ninja.router import Router
 
 router = Router()
 
