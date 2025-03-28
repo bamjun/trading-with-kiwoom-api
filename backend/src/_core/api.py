@@ -1,6 +1,7 @@
 from ninja import NinjaAPI
 
-from _core.routers import router as core_router
+from backend.src._core.router import router as core_router
+from backend.src.a_stocks._router import stocks as stocks_router
 
 api = NinjaAPI(
     title="A Stocks API",
@@ -9,3 +10,4 @@ api = NinjaAPI(
 )
 
 api.add_router("/", core_router, tags=["core"])
+api.add_router("/stocks", stocks_router, tags=["stocks"])
