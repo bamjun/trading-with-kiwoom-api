@@ -77,3 +77,9 @@ ruff format .
 # lintters 실행
 mypy .
 ```
+
+
+
+# 환경설정
+키움 REST API 에 IP 등록하기
+[키움증권 IP주소등록 페이지](https://openapi.kiwoom.com/mgmt/VOpenApiRegView)
