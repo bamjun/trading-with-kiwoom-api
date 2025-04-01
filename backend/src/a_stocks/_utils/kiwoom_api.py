@@ -21,6 +21,7 @@ class KiwoomAPI:
     def _get_access_token(self) -> str:
         """
         OAuth 접근 토큰을 발급받습니다.
+        API ID: au10001
         """
         if (
             self.access_token
@@ -50,22 +51,37 @@ class KiwoomAPI:
         self.access_token = token
         self.token_expires_dt = datetime.strptime(result["expires_dt"], "%Y%m%d%H%M%S")
 
-        if self.access_token is None:
-            raise Exception("토큰이 없습니다.")
-
+        assert self.access_token is not None
         return self.access_token
 
     def _make_request(
-        self, method: str, endpoint: str, **kwargs: Any
+        self, method: str, api_id: str, **kwargs: Any
     ) -> Dict[str, Any]:
         """
         API 요청을 보내고 응답을 처리합니다.
+        
+        Args:
+            method (str): HTTP 메서드 (GET, POST)
+            api_id (str): API ID
+            **kwargs: API 요청에 필요한 추가 파라미터
         """
-        url = f"{self.base_url}{endpoint}"
-        headers = {"Authorization": f"Bearer {self._get_access_token()}"}
+        url = f"{self.base_url}/api/dostk/acnt"
+        headers = {
+            "Authorization": f"Bearer {self._get_access_token()}",
+            "Content-Type": "application/json;charset=UTF-8",
+            "api-id": api_id,
+            "cont-yn": kwargs.get("cont_yn", "N"),
+            "next-key": kwargs.get("next_key", "")
+        }
+        
+        # API 요청 데이터 구성
+        request_data = kwargs.get("json", {})
 
         response = self.client.request(
-            method=method, url=url, headers=headers, **kwargs
+            method=method, 
+            url=url, 
+            headers=headers,
+            json=request_data
         )
         response.raise_for_status()
         result: Dict[str, Any] = response.json()
@@ -78,26 +94,59 @@ class KiwoomAPI:
     def get_stock_price(self, stock_code: str) -> Dict[str, Any]:
         """
         주식 시세 정보를 조회합니다.
+        API ID: tr10001
         """
-        return self._make_request("GET", f"/v1/stock/price/{stock_code}")
+        data = {
+            "stock_code": stock_code
+        }
+        return self._make_request("POST", "tr10001", json=data)
 
     def get_stock_info(self, stock_code: str) -> Dict[str, Any]:
         """
         종목 기본 정보를 조회합니다.
+        API ID: tr10002
         """
-        return self._make_request("GET", f"/v1/stock/info/{stock_code}")
+        data = {
+            "stock_code": stock_code
+        }
+        return self._make_request("POST", "tr10002", json=data)
 
-    def get_account_balance(self) -> Dict[str, Any]:
+    def get_account_balance(self, account_number: str) -> Dict[str, Any]:
         """
         계좌 잔고를 조회합니다.
+        API ID: ka10072
+        
+        Args:
+            account_number (str): 계좌번호
+            
+        Returns:
+            Dict[str, Any]: 계좌 잔고 정보
         """
-        return self._make_request("GET", "/v1/account/balance")
+        data = {
+            "stk_cd": account_number,
+            "strt_dt": datetime.now().strftime("%Y%m%d")
+        }
+        return self._make_request("POST", "ka10072", json=data)
 
-    def get_order_history(self, account_number: str) -> Dict[str, Any]:
+    def get_order_history(self, account_number: str, start_date: str, end_date: str) -> Dict[str, Any]:
         """
-        주문 내역을 조회합니다.
+        일자별종목별실현손익요청_기간 내역을 조회합니다.
+        API ID: ka10073
+        
+        Args:
+            account_number (str): 계좌번호
+            start_date (str): 시작일자 (YYYYMMDD)
+            end_date (str): 종료일자 (YYYYMMDD)
+            
+        Returns:
+            Dict[str, Any]: 주문 내역 정보
         """
-        return self._make_request("GET", f"/v1/order/history/{account_number}")
+        data = {
+            "stk_cd": account_number,
+            "strt_dt": start_date,
+            "end_dt": end_date
+        }
+        return self._make_request("POST", "ka10073", json=data)
 
     def __del__(self) -> None:
         """

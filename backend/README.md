@@ -83,3 +83,24 @@ mypy .
 # 환경설정
 키움 REST API 에 IP 등록하기
 [키움증권 IP주소등록 페이지](https://openapi.kiwoom.com/mgmt/VOpenApiRegView)
+
+
+# class KiwoomAPI 테스트
+```bash
+cd backend/src
+uv run python manage.py shell
+```
+
+### 계좌잔액 조회
+```python
+from a_stocks._utils.kiwoom_api import KiwoomAPI
+api = KiwoomAPI()
+api.get_account_balance(account_number="12345678")
+```
+
+### 기간별 실현 이익조회
+```python
+from a_stocks._utils.kiwoom_api import KiwoomAPI
+api = KiwoomAPI()
+te.get_order_history(account_number="12345678", start_date="20250301", end_date="20250331")
+```
