@@ -65,7 +65,7 @@ class KiwoomAPI:
             api_id (str): API ID
             **kwargs: API 요청에 필요한 추가 파라미터
         """
-        url = f"{self.base_url}/api/dostk/acnt"
+        url = kwargs.get("url", f"{self.base_url}/api/dostk/acnt")
         headers = {
             "Authorization": f"Bearer {self._get_access_token()}",
             "Content-Type": "application/json;charset=UTF-8",
@@ -90,6 +90,25 @@ class KiwoomAPI:
             raise Exception(f"API 요청 실패: {result.get('return_msg')}")
 
         return result
+    
+    
+    def basic_stock_information_request(self, stock_code: str) -> Dict[str, Any]:
+        """
+        주식 기본 정보를 조회합니다.
+        API ID: ka10001
+        
+        Args:
+            stock_code (str): 종목코드 (예: '005930')
+            
+        Returns:
+            Dict[str, Any]: 주식 기본 정보
+        """
+        url = f"{self.base_url}/api/dostk/stkinfo"
+        data = {
+            "stk_cd": stock_code
+        }
+        return self._make_request("POST", "ka10001", url=url, json=data)
+    
 
     def get_stock_price(self, stock_code: str) -> Dict[str, Any]:
         """

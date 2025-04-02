@@ -104,3 +104,16 @@ from a_stocks._utils.kiwoom_api import KiwoomAPI
 api = KiwoomAPI()
 te.get_order_history(account_number="12345678", start_date="20250301", end_date="20250331")
 ```
+
+
+
+### 테스트코드
+- 실행하기
+  - 작업경로로 이동  
+  ```bash  
+  cd backend
+  ```
+  - pytest실행
+  ```bash
+  uv run pytest -s -v
+  ```
