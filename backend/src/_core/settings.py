@@ -28,7 +28,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY")
 KIWOOM_APP_KEY = os.getenv("KIWOOM_APP_KEY")
 KIWOOM_SECRET_KEY = os.getenv("KIWOOM_SECRET_KEY")
-
+KIWOOM_API_BASE_URL = os.getenv("KIWOOM_API_BASE_URL")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
