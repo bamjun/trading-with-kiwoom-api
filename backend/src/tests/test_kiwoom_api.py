@@ -26,7 +26,7 @@ def test_basic_stock_information_request_success(kiwoom_api: KiwoomAPI, mocker: 
     mock_client.return_value.request.return_value = mock_response
 
     # Act
-    result = kiwoom_api.basic_stock_information_request("005930")
+    result = kiwoom_api.basic_stock_information_request_ka10001("005930")
     print(result)
 
     # Assert
@@ -105,7 +105,7 @@ def test_stock_trading_agent_request_success(kiwoom_api: KiwoomAPI, mocker: Mock
     kiwoom_api.client = client_mock
 
     # Act
-    result = kiwoom_api.stock_trading_agent_request("005930")
+    result = kiwoom_api.stock_trading_agent_request_ka10002("005930")
 
     # Assert
     assert result["stk_cd"] == "005930"
@@ -193,7 +193,7 @@ def test_trade_execution_information_request_success(kiwoom_api: KiwoomAPI, mock
     kiwoom_api.client = client_mock
 
     # Act
-    result = kiwoom_api.trade_execution_information_request("005930")
+    result = kiwoom_api.trade_execution_information_request_ka10003("005930")
 
     # Assert - 응답 결과 검증
     assert result["return_code"] == 0
@@ -275,7 +275,7 @@ def test_credit_trading_trend_request_success(kiwoom_api: KiwoomAPI, mocker: Moc
     test_query_type = "1"
 
     # Act
-    result = kiwoom_api.credit_trading_trend_request(
+    result = kiwoom_api.credit_trading_trend_request_ka10013(
         "005930", test_date, test_query_type
     )
 

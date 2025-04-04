@@ -86,7 +86,7 @@ class KiwoomAPI:
 
         return result
 
-    def basic_stock_information_request(self, stock_code: str) -> Dict[str, Any]:
+    def basic_stock_information_request_ka10001(self, stock_code: str) -> Dict[str, Any]:
         """
         주식 기본 정보를 조회합니다.
         API ID: ka10001
@@ -101,7 +101,7 @@ class KiwoomAPI:
         data = {"stk_cd": stock_code}
         return self._make_request("POST", "ka10001", url=url, json=data)
 
-    def stock_trading_agent_request(self, stock_code: str) -> Dict[str, Any]:
+    def stock_trading_agent_request_ka10002(self, stock_code: str) -> Dict[str, Any]:
         """
         주식거래원요청: 주식 거래원 정보를 조회합니다.
         API ID: ka10002
@@ -158,7 +158,7 @@ class KiwoomAPI:
         data = {"stk_cd": stock_code}
         return self._make_request("POST", "ka10002", url=url, json=data)
 
-    def trade_execution_information_request(self, stock_code: str) -> Dict[str, Any]:
+    def trade_execution_information_request_ka10003(self, stock_code: str) -> Dict[str, Any]:
         """
         주식 거래 실행 정보를 조회합니다.
         API ID: ka10003
@@ -167,7 +167,7 @@ class KiwoomAPI:
         data = {"stk_cd": stock_code}
         return self._make_request("POST", "ka10003", url=url, json=data)
 
-    def credit_trading_trend_request(
+    def credit_trading_trend_request_ka10013(
         self, stock_code: str, date: str, query_type: str
     ) -> Dict[str, Any]:
         """
@@ -208,6 +208,14 @@ class KiwoomAPI:
         url = f"{self.base_url}/api/dostk/stkinfo"
         data = {"stk_cd": stock_code, "dt": date, "qry_tp": query_type}
         return self._make_request("POST", "ka10013", url=url, json=data)
+    
+    def daily_transaction_details_request_ka10015(self, stock_code: str, date: str) -> Dict[str, Any]:
+        """
+        일자별종목별실현손익요청: 일자별 종목별 실현손익 정보를 조회합니다.
+        API ID: ka10014
+        """
+        url = f"{self.base_url}/api/dostk/stkinfo"
+        
 
     def get_stock_price(self, stock_code: str) -> Dict[str, Any]:
         """
