@@ -10,7 +10,7 @@ def kiwoom_api() -> KiwoomAPI:
     return KiwoomAPI()
 
 
-def test_basic_stock_information_request_success(kiwoom_api: KiwoomAPI, mocker: MockerFixture) -> None:
+def test_basic_stock_information_request_success_ka10001(kiwoom_api: KiwoomAPI, mocker: MockerFixture) -> None:
     # Arrange
     mock_response = mocker.Mock()
     mock_response.json.return_value = {
@@ -36,7 +36,7 @@ def test_basic_stock_information_request_success(kiwoom_api: KiwoomAPI, mocker: 
     assert result["return_msg"] == "정상적으로 처리되었습니다"
 
 
-def test_stock_trading_agent_request_success(kiwoom_api: KiwoomAPI, mocker: MockerFixture) -> None:
+def test_stock_trading_agent_request_success_ka10002(kiwoom_api: KiwoomAPI, mocker: MockerFixture) -> None:
     # 토큰 발급 응답 모킹
     token_response = mocker.Mock()
     token_response.json.return_value = {
@@ -119,7 +119,7 @@ def test_stock_trading_agent_request_success(kiwoom_api: KiwoomAPI, mocker: Mock
     assert call_args[1]["json"] == {"stk_cd": "005930"}
 
 
-def test_trade_execution_information_request_success(kiwoom_api: KiwoomAPI, mocker: MockerFixture) -> None:
+def test_trade_execution_information_request_success_ka10003(kiwoom_api: KiwoomAPI, mocker: MockerFixture) -> None:
     # 토큰 발급 응답 모킹
     token_response = mocker.Mock()
     token_response.json.return_value = {
@@ -219,7 +219,7 @@ def test_trade_execution_information_request_success(kiwoom_api: KiwoomAPI, mock
     assert headers["Content-Type"] == "application/json;charset=UTF-8"
 
 
-def test_credit_trading_trend_request_success(kiwoom_api: KiwoomAPI, mocker: MockerFixture) -> None:
+def test_credit_trading_trend_request_success_ka10013(kiwoom_api: KiwoomAPI, mocker: MockerFixture) -> None:
     # 토큰 발급 응답 모킹
     token_response = mocker.Mock()
     token_response.json.return_value = {
@@ -306,3 +306,296 @@ def test_credit_trading_trend_request_success(kiwoom_api: KiwoomAPI, mocker: Moc
     assert headers["api-id"] == "ka10013"
     assert headers["Authorization"] == "Bearer test_access_token"
     assert headers["Content-Type"] == "application/json;charset=UTF-8"
+
+
+def test_daily_transaction_details_request_ka10015(kiwoom_api: KiwoomAPI, mocker: MockerFixture) -> None:
+    # 토큰 발급 응답 모킹
+    token_response = mocker.Mock()
+    token_response.json.return_value = {
+        "token": "test_access_token",
+        "expires_dt": (datetime.now() + timedelta(hours=1)).strftime("%Y%m%d%H%M%S"),
+        "return_code": 0
+    }
+    
+    # API 응답 모킹
+    api_response = mocker.Mock()
+    api_response.json.return_value = {
+        "daly_trde_dtl": [
+            {
+                "dt": "20241105",
+                "close_pric": "135300",
+                "pred_pre_sig": "0",
+                "pred_pre": "0",
+                "flu_rt": "0.00",
+                "trde_qty": "0", 
+                "trde_prica": "0",
+                "bf_mkrt_trde_qty": "",
+                "opmr_trde_qty": "",
+                "af_mkrt_trde_qty": "",
+                "for_netprps": "",
+                "orgn_netprps": "",
+                "ind_netprps": "",
+                "crd_remn_rt": ""
+            },
+            {
+                "dt": "20241104",
+                "close_pric": "135300",
+                "pred_pre_sig": "2",
+                "pred_pre": "400",
+                "flu_rt": "0.30",
+                "trde_qty": "12345678",
+                "trde_prica": "1670592630400",
+                "bf_mkrt_trde_qty": "123456",
+                "opmr_trde_qty": "12000000",
+                "af_mkrt_trde_qty": "222222",
+                "for_netprps": "-500000",
+                "orgn_netprps": "+1000000",
+                "ind_netprps": "-500000",
+                "crd_remn_rt": "1.25"
+            }
+        ],
+        "return_code": 0,
+        "return_msg": "정상적으로 처리되었습니다"
+    }
+    
+    # httpx Client 모킹
+    client_mock = mocker.Mock()
+    client_mock.post.return_value = token_response
+    client_mock.request.return_value = api_response
+    
+    # 모킹된 클라이언트를 KiwoomAPI 인스턴스에 주입
+    mocker.patch("httpx.Client", return_value=client_mock)
+    kiwoom_api.client = client_mock
+    
+    # Act
+    result = kiwoom_api.daily_transaction_details_request_ka10015("005930", "20241101")
+    
+    # Assert - 응답 결과 검증
+    assert result["return_code"] == 0
+    assert len(result["daly_trde_dtl"]) == 2
+    
+    # 데이터 검증
+    first_detail = result["daly_trde_dtl"][0]
+    assert first_detail["dt"] == "20241105"
+    assert first_detail["close_pric"] == "135300"
+    assert first_detail["flu_rt"] == "0.00"
+    
+    # HTTP 요청 파라미터 검증
+    call_args = client_mock.request.call_args
+    assert call_args[1]["method"] == "POST"
+    assert call_args[1]["url"] == f"{kiwoom_api.base_url}/api/dostk/stkinfo"
+    assert call_args[1]["json"] == {"stk_cd": "005930", "strt_dt": "20241101"}
+    
+    # 헤더 검증
+    headers = call_args[1]["headers"]
+    assert headers["api-id"] == "ka10015"
+    assert headers["Authorization"] == "Bearer test_access_token"
+    assert headers["Content-Type"] == "application/json;charset=UTF-8"
+
+
+def test_reported_low_price_request_ka10016(kiwoom_api: KiwoomAPI, mocker: MockerFixture) -> None:
+    # 토큰 발급 응답 모킹
+    token_response = mocker.Mock()
+    token_response.json.return_value = {
+        "token": "test_access_token",
+        "expires_dt": (datetime.now() + timedelta(hours=1)).strftime("%Y%m%d%H%M%S"),
+        "return_code": 0
+    }
+    
+    # API 응답 모킹
+    api_response = mocker.Mock()
+    api_response.json.return_value = {
+        "ntl_pric": [
+            {
+                "stk_cd": "005930",
+                "stk_nm": "삼성전자",
+                "cur_prc": "334",
+                "pred_pre_sig": "3",
+                "pred_pre": "0",
+                "flu_rt": "0.00",
+                "trde_qty": "3",
+                "pred_trde_qty_pre_rt": "-0.00",
+                "sel_bid": "0",
+                "buy_bid": "0",
+                "high_pric": "334",
+                "low_pric": "320"
+            },
+            {
+                "stk_cd": "000660",
+                "stk_nm": "SK하이닉스",
+                "cur_prc": "186000",
+                "pred_pre_sig": "2",
+                "pred_pre": "1000",
+                "flu_rt": "0.54",
+                "trde_qty": "2345678",
+                "pred_trde_qty_pre_rt": "120.45",
+                "sel_bid": "186000",
+                "buy_bid": "185900",
+                "high_pric": "187500",
+                "low_pric": "185000"
+            }
+        ],
+        "return_code": 0,
+        "return_msg": "정상적으로 처리되었습니다"
+    }
+    
+    # httpx Client 모킹
+    client_mock = mocker.Mock()
+    client_mock.post.return_value = token_response
+    client_mock.request.return_value = api_response
+    
+    # 모킹된 클라이언트를 KiwoomAPI 인스턴스에 주입
+    mocker.patch("httpx.Client", return_value=client_mock)
+    kiwoom_api.client = client_mock
+    
+    # Act
+    result = kiwoom_api.reported_low_price_request_ka10016(
+        market_type="001",
+        new_high_low_type="1",
+        high_low_close_type="1",
+        stock_condition="0",
+        trade_qty_type="00000",
+        credit_condition="0",
+        include_up_down_limit="0",
+        period="5",
+        exchange_type="1"
+    )
+    
+    # Assert - 응답 결과 검증
+    assert result["return_code"] == 0
+    assert len(result["ntl_pric"]) == 2
+    
+    # 데이터 검증
+    first_price = result["ntl_pric"][0]
+    assert first_price["stk_cd"] == "005930"
+    assert first_price["stk_nm"] == "삼성전자"
+    assert first_price["cur_prc"] == "334"
+    
+    # HTTP 요청 파라미터 검증
+    call_args = client_mock.request.call_args
+    assert call_args[1]["method"] == "POST"
+    assert call_args[1]["url"] == f"{kiwoom_api.base_url}/api/dostk/stkinfo"
+    expected_json = {
+        "mrkt_tp": "001",
+        "ntl_tp": "1",
+        "high_low_close_tp": "1",
+        "stk_cnd": "0",
+        "trde_qty_tp": "00000",
+        "crd_cnd": "0",
+        "updown_incls": "0",
+        "dt": "5",
+        "stex_tp": "1"
+    }
+    assert call_args[1]["json"] == expected_json
+    
+    # 헤더 검증
+    headers = call_args[1]["headers"]
+    assert headers["api-id"] == "ka10016"
+    assert headers["Authorization"] == "Bearer test_access_token"
+    assert headers["Content-Type"] == "application/json;charset=UTF-8"
+
+
+def test_upper_lower_limit_price_request_ka10017(kiwoom_api: KiwoomAPI, mocker: MockerFixture) -> None:
+    # 토큰 발급 응답 모킹
+    token_response = mocker.Mock()
+    token_response.json.return_value = {
+        "token": "test_access_token",
+        "expires_dt": (datetime.now() + timedelta(hours=1)).strftime("%Y%m%d%H%M%S"),
+        "return_code": 0
+    }
+    
+    # API 응답 모킹
+    api_response = mocker.Mock()
+    api_response.json.return_value = {
+        "updown_pric": [
+            {
+                "stk_cd": "005930",
+                "stk_infr": "",
+                "stk_nm": "삼성전자",
+                "cur_prc": "+235500",
+                "pred_pre_sig": "1",
+                "pred_pre": "+54200",
+                "flu_rt": "+29.90",
+                "trde_qty": "0",
+                "pred_trde_qty": "96197",
+                "sel_req": "0",
+                "sel_bid": "0",
+                "buy_bid": "+235500",
+                "buy_req": "4",
+                "cnt": "1"
+            },
+            {
+                "stk_cd": "000660",
+                "stk_infr": "",
+                "stk_nm": "SK하이닉스",
+                "cur_prc": "+186500",
+                "pred_pre_sig": "1",
+                "pred_pre": "+43000",
+                "flu_rt": "+29.95",
+                "trde_qty": "0",
+                "pred_trde_qty": "65432",
+                "sel_req": "0",
+                "sel_bid": "0",
+                "buy_bid": "+186500",
+                "buy_req": "10",
+                "cnt": "2"
+            }
+        ],
+        "return_code": 0,
+        "return_msg": "정상적으로 처리되었습니다"
+    }
+    
+    # httpx Client 모킹
+    client_mock = mocker.Mock()
+    client_mock.post.return_value = token_response
+    client_mock.request.return_value = api_response
+    
+    # 모킹된 클라이언트를 KiwoomAPI 인스턴스에 주입
+    mocker.patch("httpx.Client", return_value=client_mock)
+    kiwoom_api.client = client_mock
+    
+    # Act
+    result = kiwoom_api.upper_lower_limit_price_request_ka10017(
+        market_type="001",
+        updown_type="1",
+        sort_type="3",
+        stock_condition="0",
+        trade_qty_type="00010",
+        credit_condition="0",
+        trade_gold_type="0",
+        exchange_type="1"
+    )
+    
+    # Assert - 응답 결과 검증
+    assert result["return_code"] == 0
+    assert len(result["updown_pric"]) == 2
+    
+    # 데이터 검증
+    first_limit = result["updown_pric"][0]
+    assert first_limit["stk_cd"] == "005930"
+    assert first_limit["stk_nm"] == "삼성전자"
+    assert first_limit["cur_prc"] == "+235500"
+    assert first_limit["flu_rt"] == "+29.90"
+    
+    # HTTP 요청 파라미터 검증
+    call_args = client_mock.request.call_args
+    assert call_args[1]["method"] == "POST"
+    assert call_args[1]["url"] == f"{kiwoom_api.base_url}/api/dostk/stkinfo"
+    expected_json = {
+        "mrkt_tp": "001",
+        "updown_tp": "1",
+        "sort_tp": "3",
+        "stk_cnd": "0",
+        "trde_qty_tp": "00010",
+        "crd_cnd": "0",
+        "trde_gold_tp": "0",
+        "stex_tp": "1"
+    }
+    assert call_args[1]["json"] == expected_json
+    
+    # 헤더 검증
+    headers = call_args[1]["headers"]
+    assert headers["api-id"] == "ka10017"
+    assert headers["Authorization"] == "Bearer test_access_token"
+    assert headers["Content-Type"] == "application/json;charset=UTF-8"
+
