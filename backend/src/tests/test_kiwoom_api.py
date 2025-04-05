@@ -11,9 +11,17 @@ def kiwoom_api() -> KiwoomAPI:
 
 
 def test_basic_stock_information_request_success_ka10001(kiwoom_api: KiwoomAPI, mocker: MockerFixture) -> None:
-    # Arrange
-    mock_response = mocker.Mock()
-    mock_response.json.return_value = {
+    # 토큰 발급 응답 모킹
+    token_response = mocker.Mock()
+    token_response.json.return_value = {
+        "token": "test_access_token",
+        "expires_dt": (datetime.now() + timedelta(hours=1)).strftime("%Y%m%d%H%M%S"),
+        "return_code": 0
+    }
+    
+    # API 응답 모킹
+    api_response = mocker.Mock()
+    api_response.json.return_value = {
         "stk_cd": "005930",
         "stk_nm": "삼성전자",
         "setl_mm": "12",
@@ -22,13 +30,20 @@ def test_basic_stock_information_request_success_ka10001(kiwoom_api: KiwoomAPI, 
         "return_code": 0,
         "return_msg": "정상적으로 처리되었습니다",
     }
-    mock_client = mocker.patch("httpx.Client")
-    mock_client.return_value.request.return_value = mock_response
-
+    
+    # httpx Client 모킹
+    client_mock = mocker.Mock()
+    client_mock.post.return_value = token_response  # 토큰 요청용
+    client_mock.request.return_value = api_response  # API 요청용
+    
+    # 모킹된 클라이언트를 KiwoomAPI 인스턴스에 주입
+    mocker.patch("httpx.Client", return_value=client_mock)
+    kiwoom_api.client = client_mock
+    
     # Act
     result = kiwoom_api.basic_stock_information_request_ka10001("005930")
     print(result)
-
+    
     # Assert
     assert result["stk_cd"] == "005930"
     assert result["stk_nm"] == "삼성전자"
