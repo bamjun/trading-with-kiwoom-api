@@ -1935,3 +1935,135 @@ def test_stock_data_by_investor_institution_request_ka10059(
     assert headers["api-id"] == "ka10059"
     assert headers["Authorization"] == "Bearer test_access_token"
     assert headers["Content-Type"] == "application/json;charset=UTF-8"
+
+
+def test_aggregate_stock_data_by_investor_institution_request_ka10061(
+    kiwoom_api: KiwoomAPI, mocker: MockerFixture
+) -> None:
+    # 토큰 발급 응답 모킹
+    mock_token_response = mocker.Mock()
+    mock_token_response.json.return_value = {
+        "return_code": 0,
+        "return_msg": "정상적으로 처리되었습니다",
+        "token": "dummy_token",
+        "expires_dt": "20241231235959",
+    }
+    mock_token_response.raise_for_status = mocker.Mock()
+    mocker.patch.object(kiwoom_api.client, "post", return_value=mock_token_response)
+
+    # API 응답 모킹
+    mock_api_response = mocker.Mock()
+    mock_api_response.json.return_value = {
+        "stk_invsr_orgn_tot": [
+            {
+                "ind_invsr": "--28837",
+                "frgnr_invsr": "--40142",
+                "orgn": "+64891",
+                "fnnc_invt": "+72584",
+                "insrnc": "--9071",
+                "invtrt": "--7790",
+                "etc_fnnc": "+35307",
+                "bank": "+526",
+                "penfnd_etc": "--22783",
+                "samo_fund": "--3881",
+                "natn": "0",
+                "etc_corp": "+1974",
+                "natfor": "+2114"
+            }
+        ],
+        "return_code": 0,
+        "return_msg": "정상적으로 처리되었습니다"
+    }
+    mock_api_response.raise_for_status = mocker.Mock()
+    mocker.patch.object(kiwoom_api.client, "request", return_value=mock_api_response)
+
+    # API 호출
+    result = kiwoom_api.aggregate_stock_data_by_investor_institution_request_ka10061(
+        stock_code="005930", 
+        start_date="20241007", 
+        end_date="20241107", 
+        amount_quantity_type="1", 
+        trade_type="0", 
+        unit_type="1000"
+    )
+
+    # 응답 검증
+    assert result["return_code"] == 0
+    assert "stk_invsr_orgn_tot" in result
+    assert len(result["stk_invsr_orgn_tot"]) == 1
+    assert result["stk_invsr_orgn_tot"][0]["ind_invsr"] == "--28837"
+    assert result["stk_invsr_orgn_tot"][0]["frgnr_invsr"] == "--40142"
+    assert result["stk_invsr_orgn_tot"][0]["orgn"] == "+64891"
+
+    # 요청 검증
+    kiwoom_api.client.request.assert_called_once_with(
+        method="POST",
+        url=f"{kiwoom_api.base_url}/api/dostk/stkinfo",
+        headers={
+            "Authorization": "Bearer dummy_token",
+            "Content-Type": "application/json;charset=UTF-8",
+            "api-id": "ka10061",
+            "cont-yn": "N",
+            "next-key": "",
+        },
+        json={
+            "stk_cd": "005930",
+            "strt_dt": "20241007",
+            "end_dt": "20241107",
+            "amt_qty_tp": "1",
+            "trde_tp": "0",
+            "unit_tp": "1000",
+        },
+    )
+
+
+def test_today_vs_previous_day_execution_request_ka10084(
+    kiwoom_api: KiwoomAPI, mocker: MockerFixture
+) -> None:
+    # 토큰 발급 응답 모킹
+    mock_token_response = mocker.Mock()
+    mock_token_response.json.return_value = {
+        "returncode": 0,
+        "returnmsg": "정상적으로 처리되었습니다",
+        "token": "dummy_token",
+        "expires_dt": "20241231235959",
+    }
+    mock_token_response.raise_for_status = mocker.Mock()
+    mocker.patch.object(kiwoom_api.client, "post", return_value=mock_token_response)
+
+    # API 응답 모킹
+    mock_api_response = mocker.Mock()
+    mock_api_response.json.return_value = {
+        "tdy_pred_cntr": [
+            {
+                "tm": "112711",
+                "cur_prc": "+128300",
+                "pred_pre": "+700",
+                "pre_rt": "+0.55",
+                "pri_sel_bid_unit": "-0",
+                "pri_buy_bid_unit": "+128300",
+                "cntr_trde_qty": "-1",
+                "sign": "2",
+                "acc_trde_qty": "2",
+                "acc_trde_prica": "0",
+                "cntr_str": "0.00"
+            },
+            {
+                "tm": "111554",
+                "cur_prc": "+128300",
+                "pred_pre": "+700",
+                "pre_rt": "+0.55",
+                "pri_sel_bid_unit": "-0",
+                "pri_buy_bid_unit": "+128300",
+                "cntr_trde_qty": "-1",
+                "sign": "2",
+                "acc_trde_qty": "1",
+                "acc_trde_prica": "0",
+                "cntr_str": "0.00"
+            }
+        ],
+        "returnCode": 0,
+        "returnMsg": "정상적으로 처리되었습니다"
+    }
+    mock_api_response.raise_for_status = mocker.Mock()
+    mocker.patch.object(kiwoom_api.client, "request", return_value=mock_api_response)

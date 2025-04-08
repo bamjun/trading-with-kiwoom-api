@@ -1084,6 +1084,172 @@ class KiwoomAPI:
             "unit_tp": unit_type,
         }
         return self._make_request("POST", "ka10059", url=url, json=data)
+    
+    
+    def aggregate_stock_data_by_investor_institution_request_ka10061(
+        self,
+        stock_code: str,
+        start_date: str,
+        end_date: str,
+        amount_quantity_type: str,
+        trade_type: str,
+        unit_type: str,
+    ) -> Dict[str, Any]:
+        """
+        종목별투자자기관별합계요청: 투자자유형별 종목별 거래량 합계 정보를 조회합니다.
+        API ID: ka10061
+
+        Args:
+            stock_code (str): 종목코드 (예: '005930')
+            start_date (str): 시작일자 (YYYYMMDD)
+            end_date (str): 종료일자 (YYYYMMDD)
+            amount_quantity_type (str): 금액수량구분 (1:금액, 2:수량)
+            trade_type (str): 매매구분 (0:순매수, 1:매수, 2:매도)
+            unit_type (str): 단위구분 (1000:천주, 1:단주)
+
+        Returns:
+            Dict[str, Any]: 종목별 투자자/기관별 합계 정보
+
+        Response Example:
+            {
+                "stk_invsr_orgn_tot": [
+                    {
+                        "ind_invsr": "--28837",       # 개인투자자
+                        "frgnr_invsr": "--40142",     # 외국인투자자
+                        "orgn": "+64891",             # 기관계
+                        "fnnc_invt": "+72584",        # 금융투자
+                        "insrnc": "--9071",           # 보험
+                        "invtrt": "--7790",           # 투신
+                        "etc_fnnc": "+35307",         # 기타금융
+                        "bank": "+526",               # 은행
+                        "penfnd_etc": "--22783",      # 연기금등
+                        "samo_fund": "--3881",        # 사모펀드
+                        "natn": "0",                  # 국가
+                        "etc_corp": "+1974",          # 기타법인
+                        "natfor": "+2114"             # 내외국인
+                    }
+                ],
+                "return_code": 0,
+                "return_msg": "정상적으로 처리되었습니다"
+            }
+        """
+        url = f"{self.base_url}/api/dostk/stkinfo"
+        data = {
+            "stk_cd": stock_code,
+            "strt_dt": start_date,
+            "end_dt": end_date,
+            "amt_qty_tp": amount_quantity_type,
+            "trde_tp": trade_type,
+            "unit_tp": unit_type,
+        }
+        return self._make_request("POST", "ka10061", url=url, json=data)
+    
+    def today_vs_previous_day_execution_request_ka10084(
+        self,
+        stock_code: str,
+        today_previous: str,
+        tick_minute: str,
+        time: str = "",
+    ) -> Dict[str, Any]:
+        url = f"{self.base_url}/api/dostk/stkinfo"
+        data = {"stk_cd": stock_code, "tdy_pred": today_previous, "tic_min": tick_minute, "tm": time}
+        return self._make_request("POST", "ka10084", url=url, json=data)
+    
+    def watchlist_stock_information_request_ka10095(
+        self,
+        stock_code: str,
+    ) -> Dict[str, Any]:
+        """
+        종목별종목정보요청: 종목별 종목정보를 조회합니다.
+        API ID: ka10095
+        """
+        url = f"{self.base_url}/api/dostk/stkinfo"
+        data = {"stk_cd": stock_code}
+        return self._make_request("POST", "ka10095", url=url, json=data)
+    
+    def stock_information_list_request_ka10099(
+        self,
+        stock_code: str,
+    ) -> Dict[str, Any]:
+        """
+        종목정보목록요청: 종목정보목록을 조회합니다.
+        API ID: ka10099
+        """
+        url = f"{self.base_url}/api/dostk/stkinfo"
+        data = {"stk_cd": stock_code}
+        return self._make_request("POST", "ka10099", url=url, json=data)
+
+    def stock_information_inquiry_ka10100(
+        self,
+        stock_code: str,
+    ) -> Dict[str, Any]:
+        """
+        종목정보조회요청: 종목정보를 조회합니다.
+        API ID: ka10100
+        """
+        url = f"{self.base_url}/api/dostk/stkinfo"
+        data = {"stk_cd": stock_code}
+        return self._make_request("POST", "ka10100", url=url, json=data)
+
+    def industry_code_list_ka10101(
+        self,
+        stock_code: str,
+    ) -> Dict[str, Any]:
+        """
+        산업코드목록요청: 산업코드목록을 조회합니다.
+        API ID: ka10101
+        """
+        url = f"{self.base_url}/api/dostk/stkinfo"
+        data = {"stk_cd": stock_code}
+        return self._make_request("POST", "ka10101", url=url, json=data)
+
+    def member_company_list_ka10102(
+        self,
+        stock_code: str,
+    ) -> Dict[str, Any]:
+        """
+        주식시세정보요청: 주식시세정보를 조회합니다.
+        API ID: ka10102
+        """
+        url = f"{self.base_url}/api/dostk/stkinfo"
+        data = {"stk_cd": stock_code}
+        return self._make_request("POST", "ka10102", url=url, json=data)
+
+    def top_50_program_buy_request_ka90003(
+        self,
+        stock_code: str,
+    ) -> Dict[str, Any]:
+        """
+        상위50프로그램매수요청: 상위50프로그램매수를 조회합니다.
+        API ID: ka90003
+        """
+        url = f"{self.base_url}/api/dostk/stkinfo"
+        data = {"stk_cd": stock_code}
+        return self._make_request("POST", "ka90003", url=url, json=data)
+
+    def stock_wise_program_trading_status_request_ka90004(
+        self,
+        stock_code: str,
+    ) -> Dict[str, Any]:
+        """
+        종목별프로그램매매상태요청: 종목별프로그램매매상태를 조회합니다.
+        API ID: ka90004
+        """
+        url = f"{self.base_url}/api/dostk/stkinfo"
+        data = {"stk_cd": stock_code}
+        return self._make_request("POST", "ka90004", url=url, json=data)
+    
+    def margin_trading_transaction_details_request_ka90012(
+        self,
+        stock_code: str,
+    ) -> Dict[str, Any]:
+        """
+        매매기관매매상세요청: 매매기관매매상세를 조회합니다.
+        API ID: ka90012
+        """
+        url = f"{self.base_url}/api/dostk/stkinfo"
+        data = {"stk_cd": stock_code}
+        return self._make_request("POST", "ka90012", url=url, json=data)
 
     def get_stock_price(self, stock_code: str) -> Dict[str, Any]:
         """
