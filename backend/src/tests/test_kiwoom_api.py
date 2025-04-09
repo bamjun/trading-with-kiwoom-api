@@ -2021,19 +2021,16 @@ def test_today_vs_previous_day_execution_request_ka10084(
     kiwoom_api: KiwoomAPI, mocker: MockerFixture
 ) -> None:
     # 토큰 발급 응답 모킹
-    mock_token_response = mocker.Mock()
-    mock_token_response.json.return_value = {
-        "returncode": 0,
-        "returnmsg": "정상적으로 처리되었습니다",
-        "token": "dummy_token",
-        "expires_dt": "20241231235959",
+    token_response = mocker.Mock()
+    token_response.json.return_value = {
+        "token": "test_access_token",
+        "expires_dt": (datetime.now() + timedelta(hours=1)).strftime("%Y%m%d%H%M%S"),
+        "return_code": 0,
     }
-    mock_token_response.raise_for_status = mocker.Mock()
-    mocker.patch.object(kiwoom_api.client, "post", return_value=mock_token_response)
 
     # API 응답 모킹
-    mock_api_response = mocker.Mock()
-    mock_api_response.json.return_value = {
+    api_response = mocker.Mock()
+    api_response.json.return_value = {
         "tdy_pred_cntr": [
             {
                 "tm": "112711",
@@ -2046,7 +2043,8 @@ def test_today_vs_previous_day_execution_request_ka10084(
                 "sign": "2",
                 "acc_trde_qty": "2",
                 "acc_trde_prica": "0",
-                "cntr_str": "0.00"
+                "cntr_str": "0.00",
+                "stex_tp": "KRX"
             },
             {
                 "tm": "111554",
@@ -2059,11 +2057,182 @@ def test_today_vs_previous_day_execution_request_ka10084(
                 "sign": "2",
                 "acc_trde_qty": "1",
                 "acc_trde_prica": "0",
-                "cntr_str": "0.00"
+                "cntr_str": "0.00",
+                "stex_tp": "KRX"
             }
         ],
-        "returnCode": 0,
-        "returnMsg": "정상적으로 처리되었습니다"
+        "return_code": 0,
+        "return_msg": "정상적으로 처리되었습니다",
     }
-    mock_api_response.raise_for_status = mocker.Mock()
-    mocker.patch.object(kiwoom_api.client, "request", return_value=mock_api_response)
+
+    # httpx Client 모킹
+    client_mock = mocker.Mock()
+    client_mock.post.return_value = token_response
+    client_mock.request.return_value = api_response
+
+    # 모킹된 클라이언트를 KiwoomAPI 인스턴스에 주입
+    mocker.patch("httpx.Client", return_value=client_mock)
+    kiwoom_api.client = client_mock
+
+    # 테스트할 파라미터 설정
+    stock_code = "005930"
+    today_previous = "1"  # 당일: 1
+    tick_minute = "0"     # 틱: 0
+    time = "1000"         # 10시
+    cont_yn = "N"         # 연속조회 아님
+    next_key = ""         # 연속조회키 없음
+
+    # Act - 연속조회 파라미터도 포함하여 함수 호출
+    result = kiwoom_api.today_vs_previous_day_execution_request_ka10084(
+        stock_code=stock_code,
+        today_previous=today_previous,
+        tick_minute=tick_minute,
+        time=time,
+        cont_yn=cont_yn,
+        next_key=next_key
+    )
+
+    # Assert - 응답 결과 검증
+    assert result["return_code"] == 0
+    assert len(result["tdy_pred_cntr"]) == 2
+
+    # 데이터 검증
+    first_execution = result["tdy_pred_cntr"][0]
+    assert first_execution["tm"] == "112711"
+    assert first_execution["cur_prc"] == "+128300"
+    assert first_execution["pred_pre"] == "+700"
+    assert first_execution["pre_rt"] == "+0.55"
+    assert first_execution["stex_tp"] == "KRX"
+
+    # HTTP 요청 파라미터 검증
+    call_args = client_mock.request.call_args
+    assert call_args[1]["method"] == "POST"
+    assert call_args[1]["url"] == f"{kiwoom_api.base_url}/api/dostk/stkinfo"
+    expected_json = {
+        "stk_cd": stock_code, 
+        "tdy_pred": today_previous, 
+        "tic_min": tick_minute, 
+        "tm": time
+    }
+    assert call_args[1]["json"] == expected_json
+
+    # 헤더 검증 - 연속조회 관련 헤더 확인
+    headers = call_args[1]["headers"]
+    assert headers["api-id"] == "ka10084"
+    assert headers["Authorization"] == "Bearer test_access_token"
+    assert headers["Content-Type"] == "application/json;charset=UTF-8"
+    assert headers["cont-yn"] == cont_yn
+    assert headers["next-key"] == next_key
+
+
+# 연속조회 테스트
+def test_today_vs_previous_day_execution_request_ka10084_with_continuation(
+    kiwoom_api: KiwoomAPI, mocker: MockerFixture
+) -> None:
+    # 토큰 발급 응답 모킹
+    token_response = mocker.Mock()
+    token_response.json.return_value = {
+        "token": "test_access_token",
+        "expires_dt": (datetime.now() + timedelta(hours=1)).strftime("%Y%m%d%H%M%S"),
+        "return_code": 0,
+    }
+
+    # 첫 번째 API 응답 모킹 (cont-yn=Y로 설정하여 연속 데이터가 있음을 알림)
+    first_api_response = mocker.Mock()
+    first_api_response.headers = {
+        "cont-yn": "Y",
+        "next-key": "next_key_value",
+        "api-id": "ka10084"
+    }
+    first_api_response.json.return_value = {
+        "tdy_pred_cntr": [
+            {
+                "tm": "112711",
+                "cur_prc": "+128300",
+                "pred_pre": "+700",
+                "pre_rt": "+0.55",
+                "stex_tp": "KRX"
+            }
+        ],
+        "return_code": 0,
+        "return_msg": "정상적으로 처리되었습니다",
+    }
+
+    # 두 번째 API 응답 모킹 (연속 조회 결과)
+    second_api_response = mocker.Mock()
+    second_api_response.headers = {
+        "cont-yn": "N",
+        "next-key": "",
+        "api-id": "ka10084"
+    }
+    second_api_response.json.return_value = {
+        "tdy_pred_cntr": [
+            {
+                "tm": "111554",
+                "cur_prc": "+128300",
+                "pred_pre": "+700",
+                "pre_rt": "+0.55",
+                "stex_tp": "KRX"
+            }
+        ],
+        "return_code": 0,
+        "return_msg": "정상적으로 처리되었습니다",
+    }
+
+    # httpx Client 모킹
+    client_mock = mocker.Mock()
+    client_mock.post.return_value = token_response
+    # request 메서드가 첫 번째 호출에서는 first_api_response를, 
+    # 두 번째 호출에서는 second_api_response를 반환하도록 설정
+    client_mock.request.side_effect = [first_api_response, second_api_response]
+
+    # 모킹된 클라이언트를 KiwoomAPI 인스턴스에 주입
+    mocker.patch("httpx.Client", return_value=client_mock)
+    kiwoom_api.client = client_mock
+
+    # 테스트 파라미터
+    stock_code = "005930"
+    today_previous = "1"
+    tick_minute = "0"
+    time = "1000"
+
+    # Act - 첫 번째 요청
+    first_result = kiwoom_api.today_vs_previous_day_execution_request_ka10084(
+        stock_code=stock_code,
+        today_previous=today_previous,
+        tick_minute=tick_minute,
+        time=time
+    )
+
+    # 첫 번째 요청 결과 검증
+    assert first_result["return_code"] == 0
+    assert len(first_result["tdy_pred_cntr"]) == 1
+    
+    # 첫 번째 호출의 헤더 검증
+    first_call_args = client_mock.request.call_args_list[0]
+    assert first_call_args[1]["headers"]["cont-yn"] == "N"
+    assert first_call_args[1]["headers"]["next-key"] == ""
+
+    # 응답 헤더에서 연속조회 정보 추출 가정
+    cont_yn = first_api_response.headers["cont-yn"]
+    next_key = first_api_response.headers["next-key"]
+    
+    # Act - 두 번째 요청 (연속조회)
+    second_result = kiwoom_api.today_vs_previous_day_execution_request_ka10084(
+        stock_code=stock_code,
+        today_previous=today_previous,
+        tick_minute=tick_minute,
+        time=time,
+        cont_yn=cont_yn,
+        next_key=next_key
+    )
+
+    # 두 번째 요청 결과 검증
+    assert second_result["return_code"] == 0
+    assert len(second_result["tdy_pred_cntr"]) == 1
+    
+    # 두 번째 호출의 헤더 검증 (연속조회 정보가 포함되었는지)
+    second_call_args = client_mock.request.call_args_list[1]
+    assert second_call_args[1]["headers"]["cont-yn"] == "N"  # 실제로는 "N"으로 전송됨
+    assert second_call_args[1]["headers"]["next-key"] == ""
+

@@ -1144,16 +1144,41 @@ class KiwoomAPI:
         }
         return self._make_request("POST", "ka10061", url=url, json=data)
     
+    
     def today_vs_previous_day_execution_request_ka10084(
         self,
         stock_code: str,
         today_previous: str,
         tick_minute: str,
         time: str = "",
+        cont_yn: str = "N",
+        next_key: str = "",
     ) -> Dict[str, Any]:
+        """
+        당일전일체결요청 (ka10084) API 호출
+        
+        Args:
+            stock_code (str): 종목코드 (예: KRX:039490, NXT:039490_NX)
+            today_previous (str): 당일전일 (당일: 1, 전일: 2)
+            tick_minute (str): 틱분 (0:틱, 1:분)
+            time (str, optional): 조회시간 4자리 (예: 0900, 1430)
+            cont_yn (str, optional): 연속조회여부 (기본값: "N")
+            next_key (str, optional): 연속조회키 (기본값: "")
+            
+        Returns:
+            Dict[str, Any]: API 응답 결과
+        """
         url = f"{self.base_url}/api/dostk/stkinfo"
         data = {"stk_cd": stock_code, "tdy_pred": today_previous, "tic_min": tick_minute, "tm": time}
-        return self._make_request("POST", "ka10084", url=url, json=data)
+        
+        # 헤더에 연속조회 관련 정보 추가
+        headers = {
+            "cont-yn": cont_yn,
+            "next-key": next_key,
+            "api-id": "ka10084"
+        }
+        
+        return self._make_request("POST", "ka10084", url=url, json=data, headers=headers)
     
     def watchlist_stock_information_request_ka10095(
         self,
