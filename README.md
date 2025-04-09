@@ -100,4 +100,4 @@ docker-compose up --build
 - [Kiwoom REST API Guide](https://openapi.kiwoom.com/main/home)
 - [Docker Compose Guide](https://docs.docker.com/compose/)
 - [UV Docs](https://docs.astral.sh/uv/)
-- [keys](https://www.notion.so/twika-1c28c2bbc2e080f9bdece247ab1ad693)
+- [keys](https://www.notion.so/config-keys-twika-1d08c2bbc2e0800396b0f45e5aefa31b)
