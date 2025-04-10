@@ -68,9 +68,16 @@ class KiwoomAPI:
             "Authorization": f"Bearer {self._get_access_token()}",
             "Content-Type": "application/json;charset=UTF-8",
             "api-id": api_id,
-            "cont-yn": kwargs.get("cont_yn", "N"),
-            "next-key": kwargs.get("next_key", ""),
         }
+
+        # 헤더에 연속조회 관련 정보 추가
+        if "headers" in kwargs:
+            # 사용자 정의 헤더가 제공된 경우, 병합
+            headers.update(kwargs["headers"])
+        else:
+            # 기본 연속조회 파라미터 설정
+            headers["cont-yn"] = kwargs.get("cont_yn", "N")
+            headers["next-key"] = kwargs.get("next_key", "")
 
         # API 요청 데이터 구성
         request_data = kwargs.get("json", {})
@@ -1084,8 +1091,7 @@ class KiwoomAPI:
             "unit_tp": unit_type,
         }
         return self._make_request("POST", "ka10059", url=url, json=data)
-    
-    
+
     def aggregate_stock_data_by_investor_institution_request_ka10061(
         self,
         stock_code: str,
@@ -1143,138 +1149,276 @@ class KiwoomAPI:
             "unit_tp": unit_type,
         }
         return self._make_request("POST", "ka10061", url=url, json=data)
-    
-    
+
     def today_vs_previous_day_execution_request_ka10084(
         self,
         stock_code: str,
         today_previous: str,
         tick_minute: str,
-        time: str = "",
+        time: str,
         cont_yn: str = "N",
         next_key: str = "",
     ) -> Dict[str, Any]:
         """
-        당일전일체결요청 (ka10084) API 호출
-        
+        금일전일체결비교요청 (ka10084) API 호출
+
         Args:
-            stock_code (str): 종목코드 (예: KRX:039490, NXT:039490_NX)
-            today_previous (str): 당일전일 (당일: 1, 전일: 2)
+            stock_code (str): 종목코드 (예: '005930')
+            today_previous (str): 금일전일구분 (0:금일, 1:전일)
             tick_minute (str): 틱분 (0:틱, 1:분)
             time (str, optional): 조회시간 4자리 (예: 0900, 1430)
             cont_yn (str, optional): 연속조회여부 (기본값: "N")
             next_key (str, optional): 연속조회키 (기본값: "")
-            
+
         Returns:
             Dict[str, Any]: API 응답 결과
         """
         url = f"{self.base_url}/api/dostk/stkinfo"
-        data = {"stk_cd": stock_code, "tdy_pred": today_previous, "tic_min": tick_minute, "tm": time}
-        
-        # 헤더에 연속조회 관련 정보 추가
-        headers = {
-            "cont-yn": cont_yn,
-            "next-key": next_key,
-            "api-id": "ka10084"
+        data = {
+            "stk_cd": stock_code,
+            "tdy_pred": today_previous,
+            "tic_min": tick_minute,
+            "tm": time,
         }
-        
-        return self._make_request("POST", "ka10084", url=url, json=data, headers=headers)
-    
+
+        # 헤더에 연속조회 관련 정보 추가
+        headers = {"cont-yn": cont_yn, "next-key": next_key, "api-id": "ka10084"}
+
+        return self._make_request(
+            "POST", "ka10084", url=url, json=data, headers=headers
+        )
+
     def watchlist_stock_information_request_ka10095(
         self,
         stock_code: str,
+        cont_yn: str = "N",
+        next_key: str = "",
     ) -> Dict[str, Any]:
         """
-        종목별종목정보요청: 종목별 종목정보를 조회합니다.
-        API ID: ka10095
+        관심종목정보요청 (ka10095) API 호출
+
+        Args:
+            stock_code (str): 종목코드 (예: KRX:039490, NXT:039490_NX) 여러개의 종목코드 입력시 | 로 구분
+            cont_yn (str, optional): 연속조회여부 (기본값: "N")
+            next_key (str, optional): 연속조회키 (기본값: "")
+
+        Returns:
+            Dict[str, Any]: API 응답 결과
         """
         url = f"{self.base_url}/api/dostk/stkinfo"
         data = {"stk_cd": stock_code}
-        return self._make_request("POST", "ka10095", url=url, json=data)
-    
+
+        # 헤더에 연속조회 관련 정보 추가
+        headers = {"cont-yn": cont_yn, "next-key": next_key, "api-id": "ka10095"}
+
+        return self._make_request(
+            "POST", "ka10095", url=url, json=data, headers=headers
+        )
+
     def stock_information_list_request_ka10099(
         self,
-        stock_code: str,
+        market_type: str,
+        cont_yn: str = "N",
+        next_key: str = "",
     ) -> Dict[str, Any]:
         """
-        종목정보목록요청: 종목정보목록을 조회합니다.
-        API ID: ka10099
+        종목정보목록요청 (ka10099) API 호출
+
+        Args:
+            market_type (str): 시장구분 (0:코스피, 10:코스닥, 3:ELW, 8:ETF, 30:K-OTC, 50:코넥스,
+                              5:신주인수권, 4:뮤추얼펀드, 6:리츠, 9:하이일드)
+            cont_yn (str, optional): 연속조회여부 (기본값: "N")
+            next_key (str, optional): 연속조회키 (기본값: "")
+
+        Returns:
+            Dict[str, Any]: API 응답 결과
         """
         url = f"{self.base_url}/api/dostk/stkinfo"
-        data = {"stk_cd": stock_code}
-        return self._make_request("POST", "ka10099", url=url, json=data)
+        data = {"mrkt_tp": market_type}
+
+        # 헤더에 연속조회 관련 정보 추가
+        headers = {"cont-yn": cont_yn, "next-key": next_key, "api-id": "ka10099"}
+
+        return self._make_request(
+            "POST", "ka10099", url=url, json=data, headers=headers
+        )
 
     def stock_information_inquiry_ka10100(
         self,
         stock_code: str,
+        cont_yn: str = "N",
+        next_key: str = "",
     ) -> Dict[str, Any]:
         """
-        종목정보조회요청: 종목정보를 조회합니다.
-        API ID: ka10100
+        종목정보조회 (ka10100) API 호출
+
+        Args:
+            stock_code (str): 종목코드 (6자리)
+            cont_yn (str, optional): 연속조회여부 (기본값: "N")
+            next_key (str, optional): 연속조회키 (기본값: "")
+
+        Returns:
+            Dict[str, Any]: API 응답 결과
         """
         url = f"{self.base_url}/api/dostk/stkinfo"
         data = {"stk_cd": stock_code}
-        return self._make_request("POST", "ka10100", url=url, json=data)
+
+        # 헤더에 연속조회 관련 정보 추가
+        headers = {"cont-yn": cont_yn, "next-key": next_key, "api-id": "ka10100"}
+
+        return self._make_request(
+            "POST", "ka10100", url=url, json=data, headers=headers
+        )
 
     def industry_code_list_ka10101(
         self,
-        stock_code: str,
+        market_type: str,
+        cont_yn: str = "N",
+        next_key: str = "",
     ) -> Dict[str, Any]:
         """
-        산업코드목록요청: 산업코드목록을 조회합니다.
-        API ID: ka10101
+        업종코드목록요청 (ka10101) API 호출
+
+        Args:
+            market_type (str): 시장구분 (0:코스피(거래소), 1:코스닥, 2:KOSPI200, 4:KOSPI100, 7:KRX100(통합지수))
+            cont_yn (str, optional): 연속조회여부 (기본값: "N")
+            next_key (str, optional): 연속조회키 (기본값: "")
+
+        Returns:
+            Dict[str, Any]: API 응답 결과
         """
         url = f"{self.base_url}/api/dostk/stkinfo"
-        data = {"stk_cd": stock_code}
-        return self._make_request("POST", "ka10101", url=url, json=data)
+        data = {"mrkt_tp": market_type}
+
+        # 헤더에 연속조회 관련 정보 추가
+        headers = {"cont-yn": cont_yn, "next-key": next_key, "api-id": "ka10101"}
+
+        return self._make_request(
+            "POST", "ka10101", url=url, json=data, headers=headers
+        )
 
     def member_company_list_ka10102(
         self,
-        stock_code: str,
+        cont_yn: str = "N",
+        next_key: str = "",
     ) -> Dict[str, Any]:
         """
-        주식시세정보요청: 주식시세정보를 조회합니다.
-        API ID: ka10102
+        회원사 리스트 요청 (ka10102) API 호출
+
+        Args:
+            cont_yn (str, optional): 연속조회여부 (기본값: "N")
+            next_key (str, optional): 연속조회키 (기본값: "")
+
+        Returns:
+            Dict[str, Any]: API 응답 결과
         """
         url = f"{self.base_url}/api/dostk/stkinfo"
-        data = {"stk_cd": stock_code}
-        return self._make_request("POST", "ka10102", url=url, json=data)
+        data: Dict[str, Any] = {}  # 이 API는 요청 본문이 비어 있습니다
+
+        # 헤더에 연속조회 관련 정보 추가
+        headers = {"cont-yn": cont_yn, "next-key": next_key, "api-id": "ka10102"}
+
+        return self._make_request(
+            "POST", "ka10102", url=url, json=data, headers=headers
+        )
 
     def top_50_program_buy_request_ka90003(
         self,
-        stock_code: str,
+        trade_upper_type: str,
+        amount_quantity_type: str,
+        market_type: str,
+        exchange_type: str,
+        cont_yn: str = "N",
+        next_key: str = "",
     ) -> Dict[str, Any]:
         """
-        상위50프로그램매수요청: 상위50프로그램매수를 조회합니다.
-        API ID: ka90003
+        프로그램순매수상위50요청 (ka90003) API 호출
+
+        Args:
+            trade_upper_type (str): 매매상위구분 (1:순매도상위, 2:순매수상위)
+            amount_quantity_type (str): 금액수량구분 (1:금액, 2:수량)
+            market_type (str): 시장구분 (P00101:코스피, P10102:코스닥)
+            exchange_type (str): 거래소구분 (1:KRX, 2:NXT, 3:통합)
+            cont_yn (str, optional): 연속조회여부 (기본값: "N")
+            next_key (str, optional): 연속조회키 (기본값: "")
+
+        Returns:
+            Dict[str, Any]: API 응답 결과
         """
         url = f"{self.base_url}/api/dostk/stkinfo"
-        data = {"stk_cd": stock_code}
-        return self._make_request("POST", "ka90003", url=url, json=data)
+        data = {
+            "trde_upper_tp": trade_upper_type,
+            "amt_qty_tp": amount_quantity_type,
+            "mrkt_tp": market_type,
+            "stex_tp": exchange_type,
+        }
+
+        # 헤더에 연속조회 관련 정보 추가
+        headers = {"cont-yn": cont_yn, "next-key": next_key, "api-id": "ka90003"}
+
+        return self._make_request(
+            "POST", "ka90003", url=url, json=data, headers=headers
+        )
 
     def stock_wise_program_trading_status_request_ka90004(
         self,
-        stock_code: str,
+        date: str,
+        market_type: str,
+        exchange_type: str,
+        cont_yn: str = "N",
+        next_key: str = "",
     ) -> Dict[str, Any]:
         """
-        종목별프로그램매매상태요청: 종목별프로그램매매상태를 조회합니다.
-        API ID: ka90004
+        종목별프로그램매매현황요청 (ka90004) API 호출
+
+        Args:
+            date (str): 일자 (YYYYMMDD 형식)
+            market_type (str): 시장구분 (P00101:코스피, P10102:코스닥)
+            exchange_type (str): 거래소구분 (1:KRX, 2:NXT, 3:통합)
+            cont_yn (str, optional): 연속조회여부 (기본값: "N")
+            next_key (str, optional): 연속조회키 (기본값: "")
+
+        Returns:
+            Dict[str, Any]: API 응답 결과
         """
         url = f"{self.base_url}/api/dostk/stkinfo"
-        data = {"stk_cd": stock_code}
-        return self._make_request("POST", "ka90004", url=url, json=data)
-    
+        data = {"dt": date, "mrkt_tp": market_type, "stex_tp": exchange_type}
+
+        # 헤더에 연속조회 관련 정보 추가
+        headers = {"cont-yn": cont_yn, "next-key": next_key, "api-id": "ka90004"}
+
+        return self._make_request(
+            "POST", "ka90004", url=url, json=data, headers=headers
+        )
+
     def margin_trading_transaction_details_request_ka90012(
         self,
-        stock_code: str,
+        date: str,
+        market_type: str,
+        cont_yn: str = "N",
+        next_key: str = "",
     ) -> Dict[str, Any]:
         """
-        매매기관매매상세요청: 매매기관매매상세를 조회합니다.
-        API ID: ka90012
+        대차거래내역요청 (ka90012) API 호출
+
+        Args:
+            date (str): 일자 (YYYYMMDD 형식)
+            market_type (str): 시장구분 (001:코스피, 101:코스닥)
+            cont_yn (str, optional): 연속조회여부 (기본값: "N")
+            next_key (str, optional): 연속조회키 (기본값: "")
+
+        Returns:
+            Dict[str, Any]: API 응답 결과
         """
         url = f"{self.base_url}/api/dostk/stkinfo"
-        data = {"stk_cd": stock_code}
-        return self._make_request("POST", "ka90012", url=url, json=data)
+        data = {"dt": date, "mrkt_tp": market_type}
+
+        # 헤더에 연속조회 관련 정보 추가
+        headers = {"cont-yn": cont_yn, "next-key": next_key, "api-id": "ka90012"}
+
+        return self._make_request(
+            "POST", "ka90012", url=url, json=data, headers=headers
+        )
 
     def get_stock_price(self, stock_code: str) -> Dict[str, Any]:
         """
